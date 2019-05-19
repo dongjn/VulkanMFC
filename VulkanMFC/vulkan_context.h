@@ -64,12 +64,42 @@ namespace seraphim{
     private:
 
 		//global
+        HWND window{nullptr};
+		HINSTANCE hInstance{ nullptr };
+        VkInstance vkInstance;
+        VkDevice  vkDevice;
+        VkFence submitFence;
+        VkPhysicalDevice vkPhysicalDevice;
+        VkQueue  graphicQueue;
+        VkQueue  transferQueue;
+        VkQueue  calculateQueue;
+        uint32_t graphicFamilyIndex{(std::numeric_limits<uint32_t>::max)()};
+        uint32_t calculateFamilyIndex{(std::numeric_limits<uint32_t >::max)()};
+        uint32_t transferFamilyIndex{(std::numeric_limits<uint32_t>::max)()};
+        VkPhysicalDeviceFeatures features;
+        VkCommandPool   transferCommandPool;
+        VkCommandBuffer transferCmdBuffer;
+		VkCommandPool  graphicCommandPool;
+		VkCommandBuffer graphicCmdBuffer;
 		static std::shared_ptr<VulkanContext> gpVKContext;
 		std::vector<const char*> vkDeviceExtensionName{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 		std::vector<const char*> vkInstanceExtensionsName { VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface",VK_EXT_DEBUG_REPORT_EXTENSION_NAME };
 		std::vector<const char*> vkLayerExtensionName;
-		//VK_KHR_SWAPCHAIN_EXTENSION_NAM
 		VkDebugReportCallbackEXT debugReportCallbackExt;
+		//Vulkan
+		VkSurfaceKHR  surface;
+		VkSwapchainKHR swapchain{VK_NULL_HANDLE};
+		std::vector<VkImage> swapchainImages;
+		UINT wWidth;
+		UINT wHeight;
+		HINSTANCE vulkanInstance;
+		
+        uint32_t vulkan_api{0};
+//        VkQueue
+        VkDeviceMemory  localMemory;
+        VkBuffer        localBuffer;
+
+
 		//Skia
 		shared_ptr<VulkanSkiaBackend>  backend;
 		sk_sp<GrContext> grContext;
@@ -78,39 +108,6 @@ namespace seraphim{
 		VkDeviceSize    skiaImageMemoryOffset;
 		VkBuffer        copyBuffer;
 		VkDeviceMemory  copyMemory;
-
-
-
-		//Vulkan
-		VkSurfaceKHR  surface;
-		VkSwapchainKHR swapchain{VK_NULL_HANDLE};
-        VkInstance vkInstance;
-        VkDevice  vkDevice;
-        VkFence submitFence;
-        VkPhysicalDevice vkPhysicalDevice;
-        HWND window{nullptr};
-		HINSTANCE hInstance{ nullptr };
-		UINT wWidth;
-		UINT wHeight;
-		HINSTANCE vulkanInstance;
-        VkDeviceMemory  localMemory;
-        VkBuffer        localBuffer;
-        uint32_t vulkan_api{0};
-//        VkQueue
-        VkQueue  graphicQueue;
-        VkQueue  transferQueue;
-        VkQueue  calculateQueue;
-        uint32_t graphicFamilyIndex{(std::numeric_limits<uint32_t>::max)()};
-        uint32_t calculateFamilyIndex{(std::numeric_limits<uint32_t >::max)()};
-        uint32_t transferFamilyIndex{(std::numeric_limits<uint32_t>::max)()};
-
-        VkPhysicalDeviceFeatures features;
-
-        VkCommandPool   transferCommandPool;
-        VkCommandBuffer transferCmdBuffer;
-		VkCommandPool  graphicCommandPool;
-		VkCommandBuffer graphicCmdBuffer;
-
 
 
 

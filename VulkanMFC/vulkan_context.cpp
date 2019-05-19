@@ -683,6 +683,13 @@ namespace seraphim {
 		vkResult = vkCreateSwapchainKHR(vkDevice, &swapchainCreateInfo, nullptr, &swapchain);
 		VkSwapchainCreateInfoKHR swapChainInfo;
 		assert(vkResult == VK_SUCCESS);
+		uint32_t image_count;
+		vkResult = vkGetSwapchainImagesKHR(vkDevice,swapchain, &image_count, nullptr);
+		assert(vkResult == VK_SUCCESS);
+		swapchainImages.resize(image_count);
+		vkResult = vkGetSwapchainImagesKHR(vkDevice,swapchain, &image_count, swapchainImages.data());
+		assert(vkResult == VK_SUCCESS);
+		
 	}
 
 	void VulkanContext::clean() {
@@ -700,12 +707,12 @@ namespace seraphim {
 
 		vkBeginCommandBuffer(graphicCmdBuffer, &beginInfo);
 		
-		vkResult = vkEndCommandBuffer(transferCmdBuffer);
+		vkResult = vkEndCommandBuffer(graphicCmdBuffer);
 		VkSubmitInfo submitInfo;
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.pNext = nullptr;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &transferCmdBuffer;
+		submitInfo.pCommandBuffers = &graphicCmdBuffer;
 		submitInfo.pSignalSemaphores = nullptr;
 		submitInfo.pWaitDstStageMask = nullptr;
 		submitInfo.waitSemaphoreCount = 0;
