@@ -71,7 +71,7 @@ namespace seraphim {
         a.fPhysicalDevice = vkPhysicalDevice;
         a.fDevice = vkDevice;
         a.fQueue = graphicQueue;
-        a.fGraphicsQueueIndex = graphicFamilyIndex;
+        a.fGraphicsQueueIndex = graphicFamily;
         a.fMaxAPIVersion = VK_MAKE_VERSION(1, 0, 0);
         a.fVkExtensions = vkExtension;
         a.fGetProc = loadFunction;
@@ -166,7 +166,7 @@ namespace seraphim {
         copyBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         copyBufferCreateInfo.pNext = nullptr;
         copyBufferCreateInfo.size = imageMemoryRequiremennts.size;
-        copyBufferCreateInfo.pQueueFamilyIndices = &transferFamilyIndex;
+        copyBufferCreateInfo.pQueueFamilyIndices = &transferFamily;
         copyBufferCreateInfo.queueFamilyIndexCount = 1;
         copyBufferCreateInfo.sharingMode  = VK_SHARING_MODE_EXCLUSIVE;
         copyBufferCreateInfo.usage  = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -201,7 +201,7 @@ namespace seraphim {
         localMemoryCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         localMemoryCreateInfo.pNext = nullptr;
         localMemoryCreateInfo.size = imageMemoryRequiremennts.size;
-        localMemoryCreateInfo.pQueueFamilyIndices = &transferFamilyIndex;
+        localMemoryCreateInfo.pQueueFamilyIndices = &transferFamily;
         localMemoryCreateInfo.queueFamilyIndexCount = 1;
         localMemoryCreateInfo.sharingMode  = VK_SHARING_MODE_EXCLUSIVE;
         localMemoryCreateInfo.usage  = VK_BUFFER_USAGE_STORAGE_BUFFER_BIT;
@@ -335,14 +335,14 @@ namespace seraphim {
 
 
     VulkanContext::VulkanContext(HWND w,HINSTANCE h,UINT32 width,UINT32 height):window(w),hInstance(h),wWidth(width),wHeight(height) {
-    //     if(window){
+         if(window){
 
-			 //vkInstanceExtensionsName.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
-    //         vkInstanceExtensionsName.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
-			 //vkInstanceExtensionsName.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
+			 vkInstanceExtensionsName.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
+             vkInstanceExtensionsName.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
+			 vkInstanceExtensionsName.push_back(VK_EXT_DEBUG_REPORT_EXTENSION_NAME);
 
-    //         vkDeviceExtensionName.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
-    //     }
+             vkDeviceExtensionName.push_back(VK_KHR_SWAPCHAIN_EXTENSION_NAME);
+         }
     }
 
 
@@ -351,7 +351,7 @@ namespace seraphim {
 
 
         vulkan_api = UINT32MAX;
-        graphicFamilyIndex = UINT32MAX;
+        graphicFamily = UINT32MAX;
         VkApplicationInfo info;
         info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         info.apiVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -447,23 +447,23 @@ namespace seraphim {
         for (uint32_t i = 0; i < familyProperties.size(); i++) {
             auto &properties = familyProperties[i];
             if (properties.queueCount > 0 && (properties.queueFlags & VK_QUEUE_GRAPHICS_BIT)) {
-                graphicFamilyIndex = i;
+                graphicFamily = i;
             }
             if(properties.queueCount > 0 && (properties.queueFlags & VK_QUEUE_TRANSFER_BIT )){
-                transferFamilyIndex = i;
+                transferFamily = i;
             }
 
             if(properties.queueCount > 0 && (properties.queueFlags & VK_QUEUE_COMPUTE_BIT)){
-                calculateFamilyIndex = i;
+                calculateFamily = i;
             }
-            if(graphicFamilyIndex < (std::numeric_limits<uint32_t>::max)() && transferFamilyIndex < (std::numeric_limits<uint32_t>::max)() && calculateFamilyIndex < (std::numeric_limits<uint32_t>::max)()){
+            if(graphicFamily < (std::numeric_limits<uint32_t>::max)() && transferFamily < (std::numeric_limits<uint32_t>::max)() && calculateFamily < (std::numeric_limits<uint32_t>::max)()){
                 break;
             }
         }
 
-		assert(graphicFamilyIndex != UINT32MAX);
-		assert(calculateFamilyIndex != UINT32MAX);
-		assert(transferFamilyIndex != UINT32MAX);
+		assert(graphicFamily != UINT32MAX);
+		assert(calculateFamily != UINT32MAX);
+		assert(transferFamily != UINT32MAX);
 		float queue_priorities[] = { 1.0f };
    
 		vector<VkDeviceQueueCreateInfo> queueCreateInfos;
@@ -471,7 +471,7 @@ namespace seraphim {
         VkDeviceQueueCreateInfo grahicQueueCreateInfo;
         grahicQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         grahicQueueCreateInfo.pNext = nullptr;
-        grahicQueueCreateInfo.queueFamilyIndex = graphicFamilyIndex;
+        grahicQueueCreateInfo.queueFamilyIndex = graphicFamily;
         grahicQueueCreateInfo.pQueuePriorities = &queue_priorities[0];
         grahicQueueCreateInfo.queueCount = 1;
 
@@ -479,7 +479,7 @@ namespace seraphim {
         VkDeviceQueueCreateInfo transferQueueCreateInfo;
         transferQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         transferQueueCreateInfo.pNext = nullptr;
-        transferQueueCreateInfo.queueFamilyIndex = graphicFamilyIndex;
+        transferQueueCreateInfo.queueFamilyIndex = graphicFamily;
         transferQueueCreateInfo.pQueuePriorities = &queue_priorities[0];
         transferQueueCreateInfo.queueCount = 1;
         queueCreateInfos.push_back(grahicQueueCreateInfo);
@@ -501,52 +501,14 @@ namespace seraphim {
 
         vkResult = vkCreateDevice(vkPhysicalDevice, &deviceCreateInfo, nullptr, &vkDevice);
         assert(vkResult == VK_SUCCESS);
-        vkGetDeviceQueue(vkDevice, graphicFamilyIndex, 0, &graphicQueue);
-        vkGetDeviceQueue(vkDevice,transferFamilyIndex,0,&transferQueue);
-
-		//transferCmdBuffer;
-        VkCommandPoolCreateInfo transferPoolCreateInfo;
-        transferPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-        transferPoolCreateInfo.pNext = nullptr;
-        transferPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-        transferPoolCreateInfo.queueFamilyIndex = transferFamilyIndex;
-        vkResult = vkCreateCommandPool(vkDevice,&transferPoolCreateInfo,nullptr,&transferCommandPool);
-        assert(vkResult == VK_SUCCESS);
-		VkCommandBufferAllocateInfo cmdBufferAllocateInfo;
-		cmdBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		cmdBufferAllocateInfo.pNext = nullptr;
-		cmdBufferAllocateInfo.commandBufferCount = 1;
-		cmdBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		cmdBufferAllocateInfo.commandPool = transferCommandPool;
-		vkResult = vkAllocateCommandBuffers(vkDevice, &cmdBufferAllocateInfo, &transferCmdBuffer);
-		assert(vkResult == VK_SUCCESS);
-
-
-
-		VkCommandPoolCreateInfo graphicPoolCreateInfo;
-		graphicPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-		graphicPoolCreateInfo.pNext = nullptr;
-		graphicPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-		graphicPoolCreateInfo.queueFamilyIndex = graphicFamilyIndex;
-		vkResult = vkCreateCommandPool(vkDevice, &graphicPoolCreateInfo, nullptr, &graphicCommandPool);
-		assert(vkResult == VK_SUCCESS);
-		VkCommandBufferAllocateInfo graphicCmdBufferAllocateInfo;
-		graphicCmdBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		graphicCmdBufferAllocateInfo.pNext = nullptr;
-		graphicCmdBufferAllocateInfo.commandBufferCount = 1;
-		graphicCmdBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		graphicCmdBufferAllocateInfo.commandPool = graphicCommandPool;
-		vkResult = vkAllocateCommandBuffers(vkDevice, &graphicCmdBufferAllocateInfo, &graphicCmdBuffer);
-		assert(vkResult == VK_SUCCESS);
-
+        vkGetDeviceQueue(vkDevice, graphicFamily, 0, &graphicQueue);
+        vkGetDeviceQueue(vkDevice,transferFamily,0,&transferQueue);
 
         VkFenceCreateInfo fenceCreateInfo;
         fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
         fenceCreateInfo.pNext = nullptr;
         fenceCreateInfo.flags = 0;
         vkCreateFence(vkDevice,&fenceCreateInfo,nullptr,&submitFence);
-
-
         assert(VK_SUCCESS == vkResult);
 
 
@@ -556,69 +518,69 @@ namespace seraphim {
 
 
     void VulkanContext::commit(){
-        VkDeviceSize  imageBytes  = backend->width * backend->height *  4;
-
-        VkResult vkResult;
-        vkResetFences(vkDevice,1,&submitFence);
-
-        VkCommandBufferBeginInfo beginInfo;
-        beginInfo.pNext = nullptr;
-        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-        beginInfo.pInheritanceInfo = nullptr;
-
-        vkBeginCommandBuffer(transferCmdBuffer,&beginInfo);
-        VkBufferImageCopy regions;
-        regions.bufferOffset = 0;
-        regions.bufferImageHeight = 0;
-        regions.bufferRowLength = 0;
-        regions.imageOffset.x = 0;
-        regions.imageOffset.y = 0;
-        regions.imageOffset.z = 0;
-        regions.imageExtent.width = backend->width;
-        regions.imageExtent.height = backend->height;
-        regions.imageExtent.depth = 0;
-        regions.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-        regions.imageSubresource.baseArrayLayer = 0;
-        regions.imageSubresource.mipLevel = 1;
-        regions.imageSubresource.layerCount = 1;
-//        vkCmdCopyImageToBuffer
-        vkCmdCopyImageToBuffer(transferCmdBuffer,backend->vkImage,VK_IMAGE_LAYOUT_UNDEFINED,copyBuffer,1,&regions);
-
-
-        VkBufferCopy bufRegion;
-        bufRegion.size = imageBytes - 1024*1024;//backend->width * backend->height* 4;
-        bufRegion.srcOffset = 1024*1024;
-        bufRegion.dstOffset = 1024*1024;
-        vkCmdCopyBuffer(transferCmdBuffer,copyBuffer,localBuffer,1,&bufRegion);
-        vkEndCommandBuffer(transferCmdBuffer);
-        VkSubmitInfo submitInfo;
-        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-        submitInfo.pNext =nullptr;
-        submitInfo.commandBufferCount = 1;
-        submitInfo.pCommandBuffers = &transferCmdBuffer;
-        submitInfo.pSignalSemaphores = nullptr;
-        submitInfo.pWaitDstStageMask = nullptr;
-        submitInfo.waitSemaphoreCount  = 0 ;
-        submitInfo.pSignalSemaphores = nullptr;
-        submitInfo.signalSemaphoreCount = 0;
-        uint8_t* test = backend->dstBuffer;
-        printf("%p",test);
-        vkResult  =  vkQueueSubmit(transferQueue,1,&submitInfo,submitFence);
-        uint8_t* pBuf;
-        vkResult = vkMapMemory(vkDevice,localMemory,0,imageBytes,0, reinterpret_cast<void**>(&pBuf));
-        assert(VK_SUCCESS == vkResult);
-        VkMappedMemoryRange memoryRange;
-        memoryRange.size = imageBytes;
-        memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
-        memoryRange.memory = localMemory;
-        memoryRange.offset = 0;
-        vkResult = vkInvalidateMappedMemoryRanges(vkDevice,1,&memoryRange);
-
-        memcpy(backend->dstBuffer,pBuf,imageBytes);
-
-    auto l = VK_REMAINING_ARRAY_LAYERS;
-        vkUnmapMemory(vkDevice,localMemory);
+//        VkDeviceSize  imageBytes  = backend->width * backend->height *  4;
+//
+//        VkResult vkResult;
+//        vkResetFences(vkDevice,1,&submitFence);
+//
+//        VkCommandBufferBeginInfo beginInfo;
+//        beginInfo.pNext = nullptr;
+//        beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+//        beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+//        beginInfo.pInheritanceInfo = nullptr;
+//
+//        vkBeginCommandBuffer(transferCmdBuffer,&beginInfo);
+//        VkBufferImageCopy regions;
+//        regions.bufferOffset = 0;
+//        regions.bufferImageHeight = 0;
+//        regions.bufferRowLength = 0;
+//        regions.imageOffset.x = 0;
+//        regions.imageOffset.y = 0;
+//        regions.imageOffset.z = 0;
+//        regions.imageExtent.width = backend->width;
+//        regions.imageExtent.height = backend->height;
+//        regions.imageExtent.depth = 0;
+//        regions.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+//        regions.imageSubresource.baseArrayLayer = 0;
+//        regions.imageSubresource.mipLevel = 1;
+//        regions.imageSubresource.layerCount = 1;
+////        vkCmdCopyImageToBuffer
+//        vkCmdCopyImageToBuffer(transferCmdBuffer,backend->vkImage,VK_IMAGE_LAYOUT_UNDEFINED,copyBuffer,1,&regions);
+//
+//
+//        VkBufferCopy bufRegion;
+//        bufRegion.size = imageBytes - 1024*1024;//backend->width * backend->height* 4;
+//        bufRegion.srcOffset = 1024*1024;
+//        bufRegion.dstOffset = 1024*1024;
+//        vkCmdCopyBuffer(transferCmdBuffer,copyBuffer,localBuffer,1,&bufRegion);
+//        vkEndCommandBuffer(transferCmdBuffer);
+//        VkSubmitInfo submitInfo;
+//        submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+//        submitInfo.pNext =nullptr;
+//        submitInfo.commandBufferCount = 1;
+//        submitInfo.pCommandBuffers = &transferCmdBuffer;
+//        submitInfo.pSignalSemaphores = nullptr;
+//        submitInfo.pWaitDstStageMask = nullptr;
+//        submitInfo.waitSemaphoreCount  = 0 ;
+//        submitInfo.pSignalSemaphores = nullptr;
+//        submitInfo.signalSemaphoreCount = 0;
+//        uint8_t* test = backend->dstBuffer;
+//        printf("%p",test);
+//        vkResult  =  vkQueueSubmit(transferQueue,1,&submitInfo,submitFence);
+//        uint8_t* pBuf;
+//        vkResult = vkMapMemory(vkDevice,localMemory,0,imageBytes,0, reinterpret_cast<void**>(&pBuf));
+//        assert(VK_SUCCESS == vkResult);
+//        VkMappedMemoryRange memoryRange;
+//        memoryRange.size = imageBytes;
+//        memoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+//        memoryRange.memory = localMemory;
+//        memoryRange.offset = 0;
+//        vkResult = vkInvalidateMappedMemoryRanges(vkDevice,1,&memoryRange);
+//
+//        memcpy(backend->dstBuffer,pBuf,imageBytes);
+//
+//    auto l = VK_REMAINING_ARRAY_LAYERS;
+//        vkUnmapMemory(vkDevice,localMemory);
     }
 
 	
@@ -694,20 +656,44 @@ namespace seraphim {
 
 	void VulkanContext::clean() {
 		VkResult vkResult;
+		uint32_t image_index;
+		VkSemaphore semahore;
+		VkSemaphoreCreateInfo semahoreCreateInfo;
+		semahoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		semahoreCreateInfo.pNext = nullptr;
+		semahoreCreateInfo.flags = 0;
+		vkCreateSemaphore(vkDevice, &semahoreCreateInfo, nullptr, &semahore);
+		VkFence fence;
+		VkFenceCreateInfo fenceCreateInfo;
+		fenceCreateInfo.flags = 0;
+		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceCreateInfo.pNext = nullptr;
+		vkCreateFence(vkDevice, &fenceCreateInfo, nullptr, &fence);
+
+
+
+
+		VkAcquireNextImageInfoKHR acquireInfo;
+		acquireInfo.deviceMask = 0;
+		acquireInfo.sType = VK_STRUCTURE_TYPE_ACQUIRE_NEXT_IMAGE_INFO_KHR;
+		acquireInfo.pNext = nullptr;
+		acquireInfo.swapchain = swapchain;
+		acquireInfo.timeout = 1000;
+		acquireInfo.semaphore = semahore;
+		acquireInfo.fence = fence;
+		vkResult = vkAcquireNextImage2KHR(vkDevice, &acquireInfo, &image_index);
 		VkCommandBufferBeginInfo beginInfo;
-
-
-
-
-
 		beginInfo.pNext = nullptr;
 		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 		beginInfo.pInheritanceInfo = nullptr;
+		//for(uint32_t i = 0 ; )
+		//vkBeginCommandBuffer(graphicCmdBuffer, &beginInfo);
+		//
 
-		vkBeginCommandBuffer(graphicCmdBuffer, &beginInfo);
-		
-		vkResult = vkEndCommandBuffer(graphicCmdBuffer);
+
+
+		//vkResult = vkEndCommandBuffer(graphicCmdBuffer);
 		VkSubmitInfo submitInfo;
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		submitInfo.pNext = nullptr;
@@ -718,8 +704,6 @@ namespace seraphim {
 		submitInfo.waitSemaphoreCount = 0;
 		submitInfo.pSignalSemaphores = nullptr;
 		submitInfo.signalSemaphoreCount = 0;
-		uint8_t* test = backend->dstBuffer;
-		printf("%p", test);
 		vkResult = vkQueueSubmit(transferQueue, 1, &submitInfo, submitFence);
 	}
 
@@ -754,12 +738,6 @@ namespace seraphim {
 
     }
     VulkanContext::~VulkanContext() {
-        for(auto& name : vkInstanceExtensionsName) {
-            delete[] name;
-        }
-        for(auto& name : vkDeviceExtensionName){
-            delete[] name;
-        }
 
     }
 };
