@@ -56,6 +56,7 @@ namespace seraphim {
 			std::vector<const char*> vkLayerExtensionName;
 			HINSTANCE hInstance{ nullptr };
 			VkInstance vkInstance{ VK_NULL_HANDLE };
+			VkDebugReportCallbackEXT debugReportCallbackExt;
 		};
 		/************************************************************************/
 		/*                                                                      */
@@ -68,6 +69,10 @@ namespace seraphim {
 			VkQueue  graphicQueue{ VK_NULL_HANDLE };
 			VkQueue  transferQueue{ VK_NULL_HANDLE };
 			VkQueue  calculateQueue{ VK_NULL_HANDLE };
+			VkCommandPool graphicPool{VK_NULL_HANDLE};
+			VkCommandPool transferPool{ VK_NULL_HANDLE};
+			VkCommandPool calculatePool{VK_NULL_HANDLE};
+			VkPhysicalDeviceFeatures features;
 			uint32_t graphicFamily{ (std::numeric_limits<uint32_t>::max)() };
 			uint32_t calculateFamily{ (std::numeric_limits<uint32_t >::max)() };
 			uint32_t transferFamily{ (std::numeric_limits<uint32_t>::max)() };
@@ -81,7 +86,12 @@ namespace seraphim {
 			VkSurfaceKHR  surface;
 			VkFormat   format;
 			VkColorSpaceKHR  colorSpace;
+			VkFence acquireFence{VK_NULL_HANDLE};
+			VkSemaphore acquireSemaphore{ VK_NULL_HANDLE };
+
+			
 			std::vector<VkImage> images;
+
 			std::vector<VkCommandBuffer> imageCmdBuffer;
 			uint32_t currentImageIndex;
 
@@ -90,7 +100,7 @@ namespace seraphim {
 		/*                                                                      */
 		/************************************************************************/
 		struct SkiaBackedHandle {
-		
+
 
 		};
 	public:
@@ -111,41 +121,25 @@ namespace seraphim {
 	private:
 
 		//global
+		static std::shared_ptr<VulkanContext> gpVKContext;
 		HWND window{ nullptr };
 		HINSTANCE hInstance{ nullptr };
-		VkInstance vkInstance;
-		VkDevice  vkDevice;
-		VkFence submitFence;
-		VkPhysicalDevice vkPhysicalDevice;
-		VkQueue  graphicQueue;
-		VkQueue  transferQueue;
-		VkQueue  calculateQueue;
-		uint32_t graphicFamily{ (std::numeric_limits<uint32_t>::max)() };
-		uint32_t calculateFamily{ (std::numeric_limits<uint32_t >::max)() };
-		uint32_t transferFamily{ (std::numeric_limits<uint32_t>::max)() };
-		VkPhysicalDeviceFeatures features;
-		VkCommandPool   transferCommandPool;
-		VkCommandPool   graphicCommandPool;
-		static std::shared_ptr<VulkanContext> gpVKContext;
-		std::vector<const char*> vkDeviceExtensionName; //{ VK_KHR_SWAPCHAIN_EXTENSION_NAME };
-		std::vector<const char*> vkInstanceExtensionsName;// { VK_KHR_SURFACE_EXTENSION_NAME, "VK_KHR_win32_surface", VK_EXT_DEBUG_REPORT_EXTENSION_NAME };
-		std::vector<const char*> vkLayerExtensionName;
-		VkDebugReportCallbackEXT debugReportCallbackExt;
-		//Vulkan
-		VkSurfaceKHR  surface;
-		VkSwapchainKHR swapchain{ VK_NULL_HANDLE };
-		std::vector<VkImage> swapchainImages;
 		UINT wWidth;
 		UINT wHeight;
+		InstanceHandle iHandle;
+		DeviceHandle   dh;
+		PresentHandle  ph;
+		SkiaBackedHandle sh;
+
+
+
+		//Skia
 		HINSTANCE vulkanInstance;
 
 		uint32_t vulkan_api{ 0 };
 		//        VkQueue
 		VkDeviceMemory  localMemory;
 		VkBuffer        localBuffer;
-
-
-		//Skia
 		shared_ptr<VulkanSkiaBackend>  backend;
 		sk_sp<GrContext> grContext;
 		VkDeviceMemory  skiaImageMemory;
@@ -153,8 +147,6 @@ namespace seraphim {
 		VkDeviceSize    skiaImageMemoryOffset;
 		VkBuffer        copyBuffer;
 		VkDeviceMemory  copyMemory;
-
-
 
 		//SwapChain
 		unique_ptr<VulkanSurfaceContext> surfaceContext;
@@ -174,8 +166,9 @@ namespace seraphim {
 		SkCanvas* makeBackend(uint32_t  width, uint32_t height, uint8_t* buffer);
 
 		void resize(UINT32 width, UINT32 height);
+		void cleanBank();
 		void clean();
-
+		void draw();
 		~VulkanContext();
 	private:
 		void initVulkan();

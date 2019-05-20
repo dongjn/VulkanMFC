@@ -26,7 +26,7 @@ inline void windo_log(const char* TAG,std::stringstream& ss) {
 		hFile = CreateFileA("d:/log/vulkan_debug.log", GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, INVALID_HANDLE_VALUE);
 		assert(hFile != INVALID_HANDLE_VALUE);
 	}
-	ss << std::endl;
+	ss <<"\r\n"<< std::endl;
 	std::string msg = ss.str();
 	DWORD dwWrite;
 	WriteFile(hFile, TAG, strlen(TAG), &dwWrite, nullptr);
