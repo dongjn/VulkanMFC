@@ -1,6 +1,6 @@
 #ifndef VULKAN_ANDROID_CONTEXT_H
 #define VULKAN_ANDROID_CONTEXT_H
-#include<vulkan/vulkan.h>
+#include<vulkan.h>
 //#include<vulkan/vulkan_win32.h>
 #include<memory>
 #include<vector>
@@ -15,26 +15,27 @@ class SkSurface;
 using  std::shared_ptr;
 using std::unique_ptr;
 namespace seraphim {
-	struct VulkanSkiaBackend {
+class SkiaBackedVK;
+	//struct VulkanSkiaBackend {
 
-		uint32_t width{ 0 };
-		uint32_t height{ 0 };
-		uint8_t* dstBuffer{ nullptr };
-		sk_sp<SkSurface>  surface{ nullptr };
-		SkCanvas*   canvas;
-		VkImage  vkImage;
-		VkDeviceSize  deviceMemorySize;
-		VkDeviceSize  deviceMemoryOffset;
-		SkCanvas* getCanvas() {
-			canvas->resetMatrix();
-			return canvas;
-		}
+	//	uint32_t width{ 0 };
+	//	uint32_t height{ 0 };
+	//	uint8_t* dstBuffer{ nullptr };
+	//	sk_sp<SkSurface>  surface{ nullptr };
+	//	SkCanvas*   canvas;
+	//	VkImage  vkImage;
+	//	VkDeviceSize  deviceMemorySize;
+	//	VkDeviceSize  deviceMemoryOffset;
+	//	SkCanvas* getCanvas() {
+	//		canvas->resetMatrix();
+	//		return canvas;
+	//	}
 
-		~VulkanSkiaBackend() {
-			delete canvas;
-		}
-		VulkanSkiaBackend(uint32_t w, uint32_t h, uint8_t* b, sk_sp<SkSurface> s, VkImage i, VkDeviceSize deviceSize, VkDeviceSize deviceOffset);
-	};
+	//	~VulkanSkiaBackend() {
+	//		delete canvas;
+	//	}
+	//	VulkanSkiaBackend(uint32_t w, uint32_t h, uint8_t* b, sk_sp<SkSurface> s, VkImage i, VkDeviceSize deviceSize, VkDeviceSize deviceOffset);
+	//};
 
 
 	struct VulkanSurfaceContext {
@@ -47,7 +48,9 @@ namespace seraphim {
 
 
 	class VulkanContext {
-	private:
+	public:
+		friend class SkianBancked;
+	public:
 		/************************************************************************/
 		/*                                                                      */
 		/************************************************************************/
@@ -63,6 +66,7 @@ namespace seraphim {
 		/************************************************************************/
 		struct DeviceHandle {
 			std::vector<const char*> vkDeviceExtensionName;
+			VkPhysicalDeviceMemoryProperties memoryProperties;
 			VkPhysicalDevice vkPhysicalDevice{ VK_NULL_HANDLE };
 			VkDevice  vkDevice{ VK_NULL_HANDLE };
 			VkFence submitFence{ VK_NULL_HANDLE };
@@ -76,6 +80,8 @@ namespace seraphim {
 			uint32_t graphicFamily{ (std::numeric_limits<uint32_t>::max)() };
 			uint32_t calculateFamily{ (std::numeric_limits<uint32_t >::max)() };
 			uint32_t transferFamily{ (std::numeric_limits<uint32_t>::max)() };
+			uint32_t diviceMemoryIndex{(std::numeric_limits<uint32_t>::max)()};
+			uint32_t localVisibaleMemoryIndex{(std::numeric_limits<uint32_t>::max)()};
 
 		};
 		/************************************************************************/
@@ -88,7 +94,7 @@ namespace seraphim {
 			VkColorSpaceKHR  colorSpace;
 			VkFence acquireFence{VK_NULL_HANDLE};
 			VkSemaphore acquireSemaphore{ VK_NULL_HANDLE };
-
+			VkSemaphore commandFinishSemaphore{ VK_NULL_HANDLE };
 			
 			std::vector<VkImage> images;
 
@@ -99,18 +105,15 @@ namespace seraphim {
 		/************************************************************************/
 		/*                                                                      */
 		/************************************************************************/
-		struct SkiaBackedHandle {
-
-
-		};
 	public:
+		friend class SkiaBackedVK;
 		static std::shared_ptr<VulkanContext> make(HWND window, HINSTANCE hInstance, UINT32 width, UINT32 height) {
-			if (gpVKContext)
+			if (gpVKContext.get() != nullptr)
 				return gpVKContext;
 			VulkanContext* c = new VulkanContext(window, hInstance, width, height);
 			gpVKContext.reset(c);
 			gpVKContext->initVulkan();
-			//gpVKContext->initGrContext();
+			gpVKContext->initGrContext();
 			return gpVKContext;
 		};
 
@@ -121,54 +124,57 @@ namespace seraphim {
 	private:
 
 		//global
+		uint32_t vulkan_api{ 0 };
 		static std::shared_ptr<VulkanContext> gpVKContext;
 		HWND window{ nullptr };
 		HINSTANCE hInstance{ nullptr };
 		UINT wWidth;
 		UINT wHeight;
-		InstanceHandle iHandle;
+		InstanceHandle ih;
 		DeviceHandle   dh;
 		PresentHandle  ph;
-		SkiaBackedHandle sh;
 
 
 
 		//Skia
 		HINSTANCE vulkanInstance;
 
-		uint32_t vulkan_api{ 0 };
-		//        VkQueue
-		VkDeviceMemory  localMemory;
-		VkBuffer        localBuffer;
-		shared_ptr<VulkanSkiaBackend>  backend;
-		sk_sp<GrContext> grContext;
-		VkDeviceMemory  skiaImageMemory;
-		VkDeviceSize    skiaImageMemorySize;
-		VkDeviceSize    skiaImageMemoryOffset;
-		VkBuffer        copyBuffer;
-		VkDeviceMemory  copyMemory;
+		////        VkQueue
+		//VkDeviceMemory  localMemory;
+		//VkBuffer        localBuffer;
+		//shared_ptr<VulkanSkiaBackend>  backend;
+		//sk_sp<GrContext> grContext;
+		//VkDeviceMemory  skiaImageMemory;
+		//VkDeviceSize    skiaImageMemorySize;
+		//VkDeviceSize    skiaImageMemoryOffset;
+		//VkBuffer        copyBuffer;
+		//VkDeviceMemory  copyMemory;
 
 		//SwapChain
 		unique_ptr<VulkanSurfaceContext> surfaceContext;
+	private://toolkit
+		uint32_t queryMemoryIndexForType(uint32_t type);
 	public:
 
 		VulkanContext(HWND window, HINSTANCE hInstance, UINT32 width, UINT32 height);
 
 		void commit();
 
-		SkCanvas* getCanvas() {
-			if (backend.get()) {
-				return backend->surface->getCanvas();
-			}
-			return nullptr;
-		}
+		//SkCanvas* getCanvas() {
+		//	if (backend.get()) {
+		//		return backend->surface->getCanvas();
+		//	}
+		//	return nullptr;
+		//}
 		void testRead();
-		SkCanvas* makeBackend(uint32_t  width, uint32_t height, uint8_t* buffer);
 
 		void resize(UINT32 width, UINT32 height);
-		void cleanBank();
+		void cleanBank(uint32_t image_index);
 		void clean();
-		void draw();
+		void present();
+		void draw(byte* data, size_t cbData);
+		void copyToSkia();
+		void copyToVulakn();
 		~VulkanContext();
 	private:
 		void initVulkan();

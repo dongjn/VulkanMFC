@@ -59,6 +59,6 @@ void VulkanWnd::OnPaint()
 	CPaintDC dc(this); // device context for painting
 					   // TODO: 在此处添加消息处理程序代码
 					   // 不为绘图消息调用 CWnd::OnPaint()
-	VulkanContext::get()->draw();
+	VulkanContext::get()->present();
 
 }

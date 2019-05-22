@@ -8,6 +8,7 @@
 #include "afxdialogex.h"
 #include"SkiaWnd.h"
 #include"vulkan_context.h"
+#include"skia_backed_vk.h"
 #include"utility.h"
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -73,6 +74,10 @@ BEGIN_MESSAGE_MAP(CVulkanSkiaCDlg, CDialogEx)
 	ON_WM_CREATE()
 	ON_WM_SHOWWINDOW()
 	ON_WM_SHOWWINDOW()
+	ON_BN_CLICKED(IDC_BUTTON1, &CVulkanSkiaCDlg::OnRthUpdateClick)
+	ON_BN_CLICKED(IDC_UpdteLeft, &CVulkanSkiaCDlg::OnBnClickedUpdteleft)
+	ON_BN_CLICKED(IDC_COPY_TO_LEFT, &CVulkanSkiaCDlg::OnBnClickedCopyToLeft)
+	ON_BN_CLICKED(IDC_COPY_TO_RITHT, &CVulkanSkiaCDlg::OnBnClickedCopyToRitht)
 END_MESSAGE_MAP()
 
 
@@ -173,6 +178,7 @@ void CVulkanSkiaCDlg::OnSize(UINT nType, int cx, int cy)
 	RECT rRect = { cx / 2,0,cx ,cy - 100 };
 	rightWnd->MoveWindow(&rRect, true);
 	vulkanContext->resize(cx, cy);
+	auto skiaBackend = seraphim::SkiaBackedVK::get();
 	// TODO: 在此处添加消息处理程序代码
 }
 
@@ -203,6 +209,7 @@ BOOL CVulkanSkiaCDlg::Create(LPCTSTR lpszTemplateName, CWnd* pParentWnd)
 }
 
 
+
 int CVulkanSkiaCDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	OutputDebugStringA("MATH_CORE_JNI\n");
@@ -210,16 +217,13 @@ int CVulkanSkiaCDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	slog(INFO_LEVEL, TAG, "OnSize cx=",1000, "|cy=",1000);
 	if (CDialogEx::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	leftWnd = new SkiaWnd(this);
 	rightWnd = new VulkanWnd(this);
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
-	HWND lh = leftWnd->m_hWnd;
-	HWND rh = rightWnd->m_hWnd;
-	RECT rect;
-	::GetWindowRect(lh, &rect);
 	UINT32 w = 400;
 	UINT32 h = 400; 
-	vulkanContext = seraphim::VulkanContext::make(rh, hInstance, w, h);
+	vulkanContext = seraphim::VulkanContext::make(rightWnd->m_hWnd, hInstance, w, h);
+	auto backend = seraphim::SkiaBackedVK::make(vulkanContext);
+	leftWnd = new SkiaWnd(this,backend);
 	// TODO:  在此添加您专用的创建代码
 
 	return 0;
@@ -230,7 +234,31 @@ int CVulkanSkiaCDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CVulkanSkiaCDlg::OnShowWindow(BOOL bShow, UINT nStatus)
 {
 	CDialogEx::OnShowWindow(bShow, nStatus);
-
-
 	// TODO: 在此处添加消息处理程序代码
+}
+
+
+void CVulkanSkiaCDlg::OnRthUpdateClick()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	rightWnd->Invalidate(false);
+}
+
+
+void CVulkanSkiaCDlg::OnBnClickedUpdteleft()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	leftWnd->Invalidate(false);
+}
+
+
+void CVulkanSkiaCDlg::OnBnClickedCopyToLeft()
+{
+	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CVulkanSkiaCDlg::OnBnClickedCopyToRitht()
+{
+	// TODO: 在此添加控件通知处理程序代码
 }

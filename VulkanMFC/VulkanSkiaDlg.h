@@ -47,4 +47,8 @@ public:
 	virtual BOOL Create(LPCTSTR lpszTemplateName, CWnd* pParentWnd = NULL);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
 	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
+	afx_msg void OnRthUpdateClick();
+	afx_msg void OnBnClickedUpdteleft();
+	afx_msg void OnBnClickedCopyToLeft();
+	afx_msg void OnBnClickedCopyToRitht();
 };

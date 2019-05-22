@@ -6,9 +6,11 @@
 #include<SkCanvas.h>
 #include<SkPaint.h>
 #include<limits>
+#include"skia_backed_vk.h"
+using namespace seraphim;
 LPCTSTR   SkiaWnd::myClassName= nullptr;
  
-SkiaWnd::SkiaWnd(CWnd* parent)
+SkiaWnd::SkiaWnd(CWnd* parent,std::shared_ptr<SkiaBackedVK> b):backed(b)
 {
 	int32_t u3;
 	int64_t u6;
@@ -46,6 +48,7 @@ SkiaWnd::~SkiaWnd()
 BEGIN_MESSAGE_MAP(SkiaWnd, CWnd)
 	ON_WM_PAINT()
 	ON_WM_SIZE()
+	ON_WM_CREATE()
 END_MESSAGE_MAP()
 
 
@@ -104,4 +107,20 @@ void SkiaWnd::OnSize(UINT nType, int cx, int cy)
 	mBitmap.setPixels(bmpBuf);
 	//auto canvas = new SkCanvas(mBitmap);
 	// TODO: 在此处添加消息处理程序代码
+}
+
+
+int SkiaWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
+{
+	if (CWnd::OnCreate(lpCreateStruct) == -1)
+		return -1;
+
+	// TODO:  在此添加您专用的创建代码
+
+	CRect rect;
+
+	GetClientRect(&rect);
+	skCanvas = backed->makeCanvas("SkiaWnd", 400, 400);
+	//skCanvas.reset(backed->makeCanvas("SkiaWnd",rect.Width(),rect.Height()));
+	return 0;
 }
