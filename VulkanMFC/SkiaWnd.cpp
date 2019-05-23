@@ -10,7 +10,7 @@
 using namespace seraphim;
 LPCTSTR   SkiaWnd::myClassName= nullptr;
  
-SkiaWnd::SkiaWnd(CWnd* parent,std::shared_ptr<SkiaBackedVK> b):backed(b)
+SkiaWnd::SkiaWnd(CWnd* parent,std::shared_ptr<SkiaBackedVK> backed,LONG l,LONG t,LONG r,LONG b):backed(backed)
 {
 	int32_t u3;
 	int64_t u6;
@@ -31,7 +31,7 @@ SkiaWnd::SkiaWnd(CWnd* parent,std::shared_ptr<SkiaBackedVK> b):backed(b)
 		}
 
 	}
-	Create(myClassName, "LeftView", 0, { 0,0,400,400 }, parent, 0);
+	Create(myClassName, "LeftView", 0, { l,t,r,b }, parent, 0);
 	ShowWindow(SW_SHOW);
 
 }
@@ -49,6 +49,7 @@ BEGIN_MESSAGE_MAP(SkiaWnd, CWnd)
 	ON_WM_PAINT()
 	ON_WM_SIZE()
 	ON_WM_CREATE()
+	ON_WM_SHOWWINDOW()
 END_MESSAGE_MAP()
 
 
@@ -120,7 +121,16 @@ int SkiaWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CRect rect;
 
 	GetClientRect(&rect);
-	skCanvas = backed->makeCanvas("SkiaWnd", 400, 400);
+	skCanvas = backed->makeBacked(1, 400, 402);
 	//skCanvas.reset(backed->makeCanvas("SkiaWnd",rect.Width(),rect.Height()));
 	return 0;
+}
+
+
+
+void SkiaWnd::OnShowWindow(BOOL bShow, UINT nStatus)
+{
+	CWnd::OnShowWindow(bShow, nStatus);
+
+	// TODO: 在此处添加消息处理程序代码
 }

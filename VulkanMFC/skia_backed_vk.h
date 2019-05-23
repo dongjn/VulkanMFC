@@ -10,6 +10,7 @@
 #include<gpu/vk/GrVkVulkan.h>
 #include<memory>
 #include<string>
+#include<unordered_map>
 class GrVkExtensions;
 
 using std::shared_ptr;
@@ -19,14 +20,29 @@ namespace seraphim {
 	class SkiaBackedVK {
 	private:
 		struct BackendHandle{
-			const string tag;
+			string tag;
 			VkImage  image{VK_NULL_HANDLE};
 			VkDeviceMemory imageMemory{VK_NULL_HANDLE};
 			VkDeviceMemory localMemory{VK_NULL_HANDLE};
+			VkBuffer  localBuffer;
 			uint32_t width{(std::numeric_limits<uint32_t>::max)()};
 			uint32_t height{(std::numeric_limits<uint32_t>::max)()};
 			VkFormat format;
 			VkColorSpaceKHR colorSpace;
+			BackendHandle() {
+
+			}
+			BackendHandle(const BackendHandle&& o) 
+				:tag(o.tag),
+				image(o.image),
+				imageMemory(o.imageMemory), 
+				localMemory(o.localMemory),
+				localBuffer(o.localBuffer),
+				width(o.width),
+				height(o.height)
+			{
+
+			}
 		};
 	public:
 		static shared_ptr<SkiaBackedVK> get();
@@ -35,8 +51,10 @@ namespace seraphim {
 		
 		shared_ptr<VulkanContext> vkContext;
 		unique_ptr<GrVkExtensions> grVkExtensions;
-		unique_ptr<GrContext> grContext;
+		sk_sp<GrContext> grContext;
 		static shared_ptr<SkiaBackedVK> self;
+		std::unordered_map<int, std::shared_ptr<BackendHandle>> mapBackend;
+
 		SkiaBackedVK(shared_ptr<VulkanContext> context) :vkContext(context) {
 
 		}
@@ -44,8 +62,10 @@ namespace seraphim {
 	public:// Toolkit
 
 	public:
-		unique_ptr<SkCanvas> SkiaBackedVK::makeCanvas(const string& t, uint32_t w, uint32_t h, VkFormat ft = VK_FORMAT_B8G8R8A8_UINT, VkColorSpaceKHR  cs = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
-
+		unique_ptr<SkCanvas> makeBacked(int tag, uint32_t w, uint32_t h, VkFormat ft = VK_FORMAT_B8G8R8A8_UINT, VkColorSpaceKHR  cs = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
+		unique_ptr<SkCanvas> resizeBacked(int tag, uint32_t width, uint32_t height);
+		void releaseBacked(int tag);
+		size_t readPixel(int tag, uint8_t* buf, size_t data);
 		
 	};
 

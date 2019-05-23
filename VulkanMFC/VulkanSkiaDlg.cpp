@@ -173,12 +173,12 @@ HCURSOR CVulkanSkiaCDlg::OnQueryDragIcon()
 void CVulkanSkiaCDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialogEx::OnSize(nType, cx, cy);
-	RECT lRect = { 0,0,cx / 2 ,cy - 100};
-	leftWnd->MoveWindow(&lRect, true);
-	RECT rRect = { cx / 2,0,cx ,cy - 100 };
-	rightWnd->MoveWindow(&rRect, true);
-	vulkanContext->resize(cx, cy);
-	auto skiaBackend = seraphim::SkiaBackedVK::get();
+	//RECT lRect = { 0,0,cx / 2 ,cy - 100};
+	//leftWnd->MoveWindow(&lRect, true);
+	//RECT rRect = { cx / 2,0,cx ,cy - 100 };
+	//rightWnd->MoveWindow(&rRect, true);
+	//vulkanContext->resize(cx, cy);
+	//auto skiaBackend = seraphim::SkiaBackedVK::get();
 	// TODO: 在此处添加消息处理程序代码
 }
 
@@ -215,15 +215,17 @@ int CVulkanSkiaCDlg::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	OutputDebugStringA("MATH_CORE_JNI\n");
 	OutputDebugStringW(L"MATH_CORE_JNI\n");
 	slog(INFO_LEVEL, TAG, "OnSize cx=",1000, "|cy=",1000);
+	CRect rect;
+	GetClientRect(&rect);
+	UINT32 width = rect.Width() / 2 ;
+	UINT32 height = rect.Height() - 50;
 	if (CDialogEx::OnCreate(lpCreateStruct) == -1)
 		return -1;
-	rightWnd = new VulkanWnd(this);
+	rightWnd = new VulkanWnd(this, 0,0,width  ,height);
 	HINSTANCE hInstance = GetModuleHandle(nullptr);
-	UINT32 w = 400;
-	UINT32 h = 400; 
-	vulkanContext = seraphim::VulkanContext::make(rightWnd->m_hWnd, hInstance, w, h);
+	vulkanContext = seraphim::VulkanContext::make(rightWnd->m_hWnd, hInstance, width, height);
 	auto backend = seraphim::SkiaBackedVK::make(vulkanContext);
-	leftWnd = new SkiaWnd(this,backend);
+	leftWnd = new SkiaWnd(this,backend,width,0,width*2 ,height);
 	// TODO:  在此添加您专用的创建代码
 
 	return 0;

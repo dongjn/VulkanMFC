@@ -80,8 +80,6 @@ class SkiaBackedVK;
 			uint32_t graphicFamily{ (std::numeric_limits<uint32_t>::max)() };
 			uint32_t calculateFamily{ (std::numeric_limits<uint32_t >::max)() };
 			uint32_t transferFamily{ (std::numeric_limits<uint32_t>::max)() };
-			uint32_t diviceMemoryIndex{(std::numeric_limits<uint32_t>::max)()};
-			uint32_t localVisibaleMemoryIndex{(std::numeric_limits<uint32_t>::max)()};
 
 		};
 		/************************************************************************/
@@ -96,9 +94,9 @@ class SkiaBackedVK;
 			VkSemaphore acquireSemaphore{ VK_NULL_HANDLE };
 			VkSemaphore commandFinishSemaphore{ VK_NULL_HANDLE };
 			
-			std::vector<VkImage> images;
+			std::vector<VkImage> images{0};
 
-			std::vector<VkCommandBuffer> imageCmdBuffer;
+			std::vector<VkCommandBuffer> imageCmdBuffer{0};
 			uint32_t currentImageIndex;
 
 		};
@@ -153,7 +151,7 @@ class SkiaBackedVK;
 		//SwapChain
 		unique_ptr<VulkanSurfaceContext> surfaceContext;
 	private://toolkit
-		uint32_t queryMemoryIndexForType(uint32_t type);
+		uint32_t queryMemoryTypeIndex(uint32_t type,uint32_t require_properites);
 	public:
 
 		VulkanContext(HWND window, HINSTANCE hInstance, UINT32 width, UINT32 height);

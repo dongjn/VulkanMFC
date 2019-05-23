@@ -19,7 +19,7 @@ private:
 	std::shared_ptr<SkiaBackedVK> backed{nullptr};
 public:
 
-	SkiaWnd(CWnd* parent, std::shared_ptr<SkiaBackedVK> backed);
+	SkiaWnd(CWnd* parent, std::shared_ptr<SkiaBackedVK> backed ,LONG l,LONG t,LONG r,LONG b);
 	void DrawSkia();
 	
 	virtual ~SkiaWnd();
@@ -27,5 +27,6 @@ public:
 	afx_msg void OnPaint();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
 	afx_msg int OnCreate(LPCREATESTRUCT lpCreateStruct);
+	afx_msg void OnShowWindow(BOOL bShow, UINT nStatus);
 };
 

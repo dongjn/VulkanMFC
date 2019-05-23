@@ -3,7 +3,7 @@
 #include"vulkan_context.h"
 LPCSTR VulkanWnd::myClassName = nullptr;
 using namespace seraphim;
-VulkanWnd::VulkanWnd(CWnd* parent)
+VulkanWnd::VulkanWnd(CWnd* parent,LONG l,LONG t,LONG r,LONG b)
 {
 
 	if (myClassName == nullptr) {
@@ -22,7 +22,7 @@ VulkanWnd::VulkanWnd(CWnd* parent)
 		}
 
 	}
-	Create(myClassName, "LeftView", 0, { 0,0,100,100 }, parent, 0);
+	Create(myClassName, "LeftView", 0, { l,t,r,b }, parent, 0);
 	ShowWindow(SW_SHOW);
 }
 

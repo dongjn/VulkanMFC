@@ -6,7 +6,7 @@ class VulkanWnd :public CWnd
 private:
 	static LPCTSTR myClassName;
 public:
-	VulkanWnd(CWnd* parent);
+	VulkanWnd(CWnd* parent,LONG l,LONG t,LONG r,LONG b);
 	virtual ~VulkanWnd();
 	DECLARE_MESSAGE_MAP()
 	afx_msg void OnSize(UINT nType, int cx, int cy);

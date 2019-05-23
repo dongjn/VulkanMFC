@@ -107,8 +107,11 @@ namespace seraphim {
 		
 		        a.fFeatures = 0;
 		        a.fDeviceFeatures = &vkContext->dh.features;
-		        auto grContext = GrContext::MakeVulkan(a);
-		        assert(grContext);
+		        grContext = GrContext::MakeVulkan(a);
+				
+		  //      assert(gc);
+				//grContext.reset(gc.get());
+				//gc.reset(nullptr);
 				return grContext!= nullptr;
 		
 		        //VkPhysicalDeviceMemoryProperties memoryProperties;
@@ -182,24 +185,19 @@ namespace seraphim {
 	// Parameter: VkFormat ft
 	// Parameter: VkColorSpaceKHR cs
 	//************************************
-	unique_ptr<SkCanvas> SkiaBackedVK::makeCanvas(const string& t, uint32_t w, uint32_t h, VkFormat ft , VkColorSpaceKHR  cs)
+	unique_ptr<SkCanvas> SkiaBackedVK::makeBacked(int tag, uint32_t w, uint32_t h, VkFormat ft , VkColorSpaceKHR  cs)
 	{
 
 		VkResult vkResult;
 		VkImage image;
 		VkDeviceMemory imageMemory=VK_NULL_HANDLE;
 		VkDeviceMemory locateMemory  =  VK_NULL_HANDLE;
+		VkBuffer localBuffer = VK_NULL_HANDLE;
 		VkDevice vkDevice = vkContext->dh.vkDevice;
 		
 		VkDeviceSize imageMemorySize = 0;
-		//initMemory
-
-		
-
-
-
+		//CreateImage
 		VkImageCreateInfo imageCreateInfo;
-
 		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCreateInfo.pNext = nullptr;
 		imageCreateInfo.flags = 0;
@@ -219,20 +217,22 @@ namespace seraphim {
 		imageCreateInfo.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 		vkResult = vkCreateImage(vkContext->dh.vkDevice, &imageCreateInfo, nullptr, &image);
 		assert(vkResult == VK_SUCCESS);
+		
 
 
+
+
+		//BindImageMemory
 		VkMemoryRequirements imageRequirements;
 		vkGetImageMemoryRequirements(vkDevice, image, &imageRequirements);
-		imageMemorySize = imageRequirements.size * 64;
+		imageMemorySize = imageRequirements.size ;
 		VkMemoryAllocateInfo allocateInfo;
 		allocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
 		allocateInfo.pNext = nullptr;
 		allocateInfo.allocationSize = imageMemorySize;
-		allocateInfo.memoryTypeIndex =  vkContext->dh.diviceMemoryIndex;
+		allocateInfo.memoryTypeIndex = vkContext->queryMemoryTypeIndex(imageRequirements.memoryTypeBits,VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
 		vkResult = vkAllocateMemory(vkDevice, &allocateInfo, nullptr, &imageMemory);
 		assert(vkResult == VK_SUCCESS);
-
-
 		VkBindImageMemoryInfo bindInfo;
 		bindInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
 		bindInfo.pNext = nullptr;
@@ -241,10 +241,38 @@ namespace seraphim {
 		bindInfo.memoryOffset = 0;
 		PFN_vkBindImageMemory2 myBindImageMemory2 = (PFN_vkBindImageMemory2)vkGetDeviceProcAddr(vkDevice, "vkBindImageMemory2");
 		vkResult = myBindImageMemory2(vkDevice, 1, &bindInfo);
-		//vkResult = vkBindImageMemory(vkDevice, image, imageMemory, 0);
 
+		//Make local Buffer Memory
+		VkBufferCreateInfo bufferCreateInfo;
+		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferCreateInfo.pNext = nullptr;
+		bufferCreateInfo.pQueueFamilyIndices = nullptr;
+		bufferCreateInfo.queueFamilyIndexCount = 0;
+		bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+		bufferCreateInfo.size = imageMemorySize;
+		bufferCreateInfo.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT;
+		bufferCreateInfo.flags = 0;
+		vkResult = vkCreateBuffer(vkDevice, &bufferCreateInfo, nullptr, &localBuffer);
+		assert(vkResult == VK_SUCCESS);
+		VkMemoryRequirements bufferRequirement;
+		vkGetBufferMemoryRequirements(vkDevice, localBuffer, &bufferRequirement);
+		VkMemoryAllocateInfo bufferMemoryAllocateInfo;
+		bufferMemoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		bufferMemoryAllocateInfo.pNext = nullptr;
+		bufferMemoryAllocateInfo.memoryTypeIndex = vkContext->queryMemoryTypeIndex(bufferRequirement.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_COHERENT_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+		bufferMemoryAllocateInfo.allocationSize = bufferRequirement.size;
+		vkResult = vkAllocateMemory(vkDevice, &bufferMemoryAllocateInfo, nullptr,&locateMemory);
+		assert(VK_SUCCESS == vkResult);
+		vkResult = vkBindBufferMemory(vkDevice, localBuffer, locateMemory, 0);
+		assert(VK_SUCCESS == vkResult);
+		//bufBindInfo.memoryOffset = 0;
+		//bufBindInfo.sType = VK_STRUCTURE_TYPE_BIND_IMAGE_MEMORY_INFO;
+		//bufBindInfo.pNext = nullptr;
+		//bufBindInfo.image = image;
+		//bufBindInfo.memory = imageMemory;
+		
 
-
+		//Make GrBackendText SkSurface SkCanvas
 		assert(vkResult == VK_SUCCESS);
 		GrVkAlloc grVkAlloc(imageMemory, 0, imageMemorySize, GrVkAlloc::kNoncoherent_Flag);
 		GrVkImageInfo grImageInfo(image, grVkAlloc, VK_IMAGE_TILING_LINEAR,
@@ -262,8 +290,43 @@ namespace seraphim {
 			surfaceProps);
 		assert(surface.get());
 		unique_ptr<SkCanvas> pCanvas(surface->getCanvas());
-		//this->backend = std::make_shared<VulkanSkiaBackend>(width, height, buffer, surface, image, 0, 0);
+		std::shared_ptr<BackendHandle> handle = std::make_shared<BackendHandle>();
+		handle->tag = tag;
+		handle->colorSpace = cs;
+		handle->format = ft;
+		handle->height = h;
+		handle->width = w;
+		handle->image = image;
+		handle->imageMemory = imageMemory;
+		handle->localMemory = locateMemory;
+		handle->localBuffer = localBuffer;
+		mapBackend.insert(std::make_pair(1, std::move(handle)));
 		return pCanvas;
+	}
+
+	unique_ptr<SkCanvas> SkiaBackedVK::resizeBacked(int tag, uint32_t width, uint32_t height)
+	{
+		return nullptr;
+	}
+
+	void SkiaBackedVK::releaseBacked(int tag)
+	{
+
+	}
+
+	size_t SkiaBackedVK::readPixel(int tag, uint8_t* buf, size_t data)
+	{
+		auto itr = mapBackend.find(1);
+		//sk_sp<SkColorSpace> colorSpace = SkColorSpacVe::MakeSRGB();
+
+		//auto dstImgInfo = SkImageInfo::Make(width, backend->height,
+		//	SkColorType::kRGBA_8888_SkColorType,
+		//	SkAlphaType::kLastEnum_SkAlphaType, colorSpace);
+		//SkBitmap dstBitmap = SkBitmap();//(dstImgInfo);
+		//dstBitmap.setInfo(dstImgInfo);
+		//dstBitmap.setPixels(backend->dstBuffer);
+		//bool bRst = backend->surface->readPixels(dstBitmap, 0, 0);
+		return data;
 	}
 
 }

@@ -502,6 +502,7 @@ namespace seraphim {
 		assert(dh.transferFamily != UINT32MAX);
 		float queue_priorities[] = { 1.0f };
 
+		//VkPhysicalDeviceMemoryProperties memoryProperties;
 		vkGetPhysicalDeviceMemoryProperties(dh.vkPhysicalDevice, &dh.memoryProperties);
 
 		vector<VkDeviceQueueCreateInfo> queueCreateInfos;
