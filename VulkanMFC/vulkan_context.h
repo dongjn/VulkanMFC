@@ -96,6 +96,9 @@ class SkiaBackedVK;
 			//assert(gpVKContext);
 			return gpVKContext;
 		}
+		static void release() {
+			gpVKContext = nullptr;
+		}
 	private:
 
 		//global

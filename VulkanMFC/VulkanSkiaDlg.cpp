@@ -78,6 +78,8 @@ BEGIN_MESSAGE_MAP(CVulkanSkiaCDlg, CDialogEx)
 	ON_BN_CLICKED(IDC_UpdteLeft, &CVulkanSkiaCDlg::OnBnClickedUpdteleft)
 	ON_BN_CLICKED(IDC_COPY_TO_LEFT, &CVulkanSkiaCDlg::OnBnClickedCopyToLeft)
 	ON_BN_CLICKED(IDC_COPY_TO_RITHT, &CVulkanSkiaCDlg::OnBnClickedCopyToRitht)
+	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_DRAW_SKIA, &CVulkanSkiaCDlg::OnBnClickedDrawSkia)
 END_MESSAGE_MAP()
 
 
@@ -186,8 +188,15 @@ void CVulkanSkiaCDlg::OnSize(UINT nType, int cx, int cy)
 void CVulkanSkiaCDlg::OnCancel()
 {
 	// TODO: 在此添加专用代码和/或调用基类
-	leftWnd->DrawSkia();
-	//CDialogEx::OnCancel();
+	leftWnd->DestroyWindow();
+	rightWnd->DestroyWindow();
+	delete leftWnd;
+	leftWnd = nullptr;
+	delete rightWnd;
+	rightWnd = nullptr;
+	CDialogEx::OnCancel();
+	seraphim::SkiaBackedVK::release();
+	seraphim::VulkanContext::release();
 }
 
 
@@ -204,7 +213,6 @@ BOOL CVulkanSkiaCDlg::CreateEx(DWORD dwExStyle, LPCTSTR lpszClassName, LPCTSTR l
 BOOL CVulkanSkiaCDlg::Create(LPCTSTR lpszTemplateName, CWnd* pParentWnd)
 {
 	// TODO: 在此添加专用代码和/或调用基类
-
 	return CDialogEx::Create(lpszTemplateName, pParentWnd);
 }
 
@@ -263,4 +271,20 @@ void CVulkanSkiaCDlg::OnBnClickedCopyToLeft()
 void CVulkanSkiaCDlg::OnBnClickedCopyToRitht()
 {
 	// TODO: 在此添加控件通知处理程序代码
+}
+
+
+void CVulkanSkiaCDlg::OnClose()
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	CDialogEx::OnClose();
+
+
+}
+
+
+void CVulkanSkiaCDlg::OnBnClickedDrawSkia()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	leftWnd->DrawSkia();
 }

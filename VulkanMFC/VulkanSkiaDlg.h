@@ -51,4 +51,6 @@ public:
 	afx_msg void OnBnClickedUpdteleft();
 	afx_msg void OnBnClickedCopyToLeft();
 	afx_msg void OnBnClickedCopyToRitht();
+	afx_msg void OnClose();
+	afx_msg void OnBnClickedDrawSkia();
 };

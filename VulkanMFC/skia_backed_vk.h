@@ -22,26 +22,21 @@ namespace seraphim {
 		struct BackendHandle{
 			string tag;
 			VkImage  image{VK_NULL_HANDLE};
-			VkDeviceMemory imageMemory{VK_NULL_HANDLE};
-			VkDeviceMemory localMemory{VK_NULL_HANDLE};
-			VkBuffer       localBuffer{ VK_NULL_HANDLE };
-			VkImage localImage{VK_NULL_HANDLE};
+			VkDeviceMemory skiaImageMemory{VK_NULL_HANDLE};
+			VkDeviceMemory transferMemory{VK_NULL_HANDLE};
+			VkBuffer       transferBuffer{ VK_NULL_HANDLE };
 			uint32_t width{(std::numeric_limits<uint32_t>::max)()};
 			uint32_t height{(std::numeric_limits<uint32_t>::max)()};
 			VkFormat format;
 			VkColorSpaceKHR colorSpace;
 			sk_sp<SkSurface> surface;
-			BackendHandle() {
-				
-
-			}
+			BackendHandle() {};
 			BackendHandle(const BackendHandle&& o) 
 				:tag(o.tag),
 				image(o.image),
-				imageMemory(o.imageMemory), 
-				localMemory(o.localMemory),
-				localImage(o.localImage),
-				localBuffer(o.localBuffer),
+				skiaImageMemory(o.skiaImageMemory), 
+				transferMemory(o.transferMemory),
+				transferBuffer(o.transferBuffer),
 				width(o.width),
 				height(o.height)
 			{
@@ -51,6 +46,7 @@ namespace seraphim {
 	public:
 		static shared_ptr<SkiaBackedVK> get();
 		static shared_ptr<SkiaBackedVK> make(shared_ptr<VulkanContext> vkContext);
+		static void release();
 	private:
 		
 		VkCommandPool  commandPool;
@@ -71,8 +67,10 @@ namespace seraphim {
 	public:
 		unique_ptr<SkCanvas> makeBacked(int tag, uint32_t w, uint32_t h, VkFormat ft = VK_FORMAT_B8G8R8A8_UINT, VkColorSpaceKHR  cs = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR);
 		unique_ptr<SkCanvas> resizeBacked(int tag, uint32_t width, uint32_t height);
-		void releaseBacked(int tag);
+		std::unordered_map<int,std::shared_ptr<BackendHandle>>::iterator releaseBacked(int tag);
 		size_t readPixel(int tag, uint8_t* buf, size_t data);
+		~SkiaBackedVK();
+		
 		
 	};
 

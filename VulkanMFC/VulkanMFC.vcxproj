@@ -76,11 +76,11 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\sources\skia\include\config;E:\sources\skia\include\core;E:\sources\skia;E:\sources\skia\include;C:\VulkanSDK\1.1.101.0\Include\vulkan;$(IncludePath)</IncludePath>
+    <IncludePath>E:\sources\skia\src\gpu\vk;e:\sources\skia\include\private;E:\sources\skia\src\gpu\;E:\sources\skia\include\config;E:\sources\skia\include\core;E:\sources\skia\include;E:\sources\skia;C:\VulkanSDK\1.1.101.0\Include\vulkan;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>C:\VulkanSDK\1.1.101.0\Include\vulkan;C:\VulkanSDK\1.1.101.0\Include;E:\sources\skia\include\effects;E:\sources\skia\include\config;E:\sources\skia\include\core;E:\sources\skia;E:\sources\skia\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\VulkanSDK\1.1.101.0\Include\vulkan;C:\VulkanSDK\1.1.101.0\Include;E:\sources\skia;E:\sources\skia\include;E:\sources\skia\include\effects;E:\sources\skia\include\config;E:\sources;E:\sources\skia\include\core;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -97,6 +97,8 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_CRT_SECURE_NO_WARNINGS;WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>
+      </AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
