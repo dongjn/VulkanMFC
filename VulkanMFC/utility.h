@@ -19,6 +19,11 @@
 #include<android/log.h>
 #include <iostream>
 #elif  _WINDOWS
+#include <chrono>
+#include <cinttypes>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 #include<Windows.h>
 extern HANDLE hFile;// = INVALID_HANDLE_VALUE;
 inline void windo_log(const char* TAG,std::stringstream& ss) {
@@ -26,9 +31,19 @@ inline void windo_log(const char* TAG,std::stringstream& ss) {
 		hFile = CreateFileA("d:/log/vulkan_debug.log", GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, INVALID_HANDLE_VALUE);
 		assert(hFile != INVALID_HANDLE_VALUE);
 	}
-	ss <<"\r\n"<< std::endl;
+	std::stringstream sst;
+	auto n = std::chrono::system_clock::now();
+	auto ms = n.time_since_epoch();
+	auto diff = std::chrono::duration_cast<std::chrono::milliseconds>(ms).count();
+	auto const msecs = diff % 1000;
+
+	std::time_t t = std::chrono::system_clock::to_time_t(n);
+	sst << "<" << std::put_time(std::localtime(&t), "%Y-%m-%d %H.%M.%S") << "." << msecs << ">";
+	ss << "\r\n";
+	std::string tmsg = sst.str();
 	std::string msg = ss.str();
 	DWORD dwWrite;
+	WriteFile(hFile, tmsg.c_str(),tmsg.length(), &dwWrite, nullptr);
 	WriteFile(hFile, TAG, strlen(TAG), &dwWrite, nullptr);
 	WriteFile(hFile, msg.c_str(), msg.length(), &dwWrite, nullptr);
 	FlushFileBuffers(hFile);

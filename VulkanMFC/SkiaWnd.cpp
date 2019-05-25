@@ -55,24 +55,24 @@ END_MESSAGE_MAP()
 
 void SkiaWnd::OnPaint()
 {
-
-
+	// device context for painting
+	// TODO: 在此处添加消息处理程序代码
+	// 不为绘图消息调用 CWnd::OnPaint()
 	auto s0 = (std::numeric_limits<size_t>::max)();
 	auto s = 5;
-	
-	CPaintDC dc(this); // device context for painting
-					   // TODO: 在此处添加消息处理程序代码
-					   // 不为绘图消息调用 CWnd::OnPaint()
+	CRect rect;
+	GetWindowRect(&rect);
+	CPaintDC dc(this); 
 	//BITMAPCOREINFO
 	BITMAP bmpSrc;
 	auto currenBitmap = dc.GetCurrentBitmap();
 	currenBitmap->GetBitmap(&bmpSrc);
 	BITMAP bmpIndirect;
-	bmpIndirect.bmWidth = mBitmap.width();
-	bmpIndirect.bmHeight = mBitmap.height();
+	bmpIndirect.bmWidth = rect.Width();
+	bmpIndirect.bmHeight = rect.Height();
 	bmpIndirect.bmBitsPixel = 32;
 	bmpIndirect.bmBits = bmpBuf;
-	bmpIndirect.bmWidthBytes = mBitmap.width() * 4;
+	bmpIndirect.bmWidthBytes = rect.Width() * 4;
 	bmpIndirect.bmType = 0;
 	bmpIndirect.bmPlanes = 1;
 	CBitmap bmp;
@@ -86,28 +86,44 @@ void SkiaWnd::OnPaint()
 
 
 void SkiaWnd::DrawSkia() {
-	SkCanvas canvas(mBitmap);
 	SkPaint p;
-	p.setStyle(SkPaint::Style::kStroke_Style);
+	p.setAntiAlias(true);
+	CRect rect;
+	GetClientRect(&rect);
+
+	
+
+	p.setStyle(SkPaint::Style::kFill_Style);
+	p.setColor(0x55112244);
+	canvas->drawRect({ 0, 0, SkScalar(rect.Width()) , SkScalar(rect.Height()) }, p);
+	
+	
 	p.setColor(0xff0000ff);
-	//p.setARGB(0, 0, 0, 0);
-	canvas.drawRect({0,0,100,100}, p);
-	Invalidate();
+	canvas->drawRect({100,100,200,200}, p);
+	p.setColor(0xff00ff00);
+	canvas->drawRect({ 200,100,300,200 }, p);
+	p.setColor(0xffff0000);
+	canvas->drawRect({ 300,100,400,200 }, p);
+	p.setStyle(SkPaint::Style::kStroke_Style);
+	p.setStrokeWidth(2);
+	p.setColor(0xffffffff);
+	canvas->drawLine(0, 0, rect.Width(), rect.Height(), p);
+	canvas->drawLine(0, rect.Height(), rect.Width(), 0, p);
+	memset(bmpBuf, 0, cbBuf);
+	backed->readPixel(1, bmpBuf, cbBuf);
+	Invalidate(TRUE);
 
 }
 
 void SkiaWnd::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
+	// TODO: 在此处添加消息处理程序代码
 	if (this->bmpBuf)
 		delete[] bmpBuf;
-	bmpBuf = new uint8_t[cx* cy * 4];
-	//mBitmap.reset(new SkBitmap());
-	SkImageInfo info = SkImageInfo::Make(cx, cy, kBGRA_8888_SkColorType, kOpaque_SkAlphaType);
-	mBitmap.setInfo(info);
-	mBitmap.setPixels(bmpBuf);
-	//auto canvas = new SkCanvas(mBitmap);
-	// TODO: 在此处添加消息处理程序代码
+	cbBuf = cx * cy * 4;
+	bmpBuf = new uint8_t[cbBuf];
+
 }
 
 
@@ -120,8 +136,9 @@ int SkiaWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 
 	CRect rect;
 
-	GetClientRect(&rect);
-	skCanvas = backed->makeBacked(1, 400, 402);
+	GetWindowRect(&rect);
+	canvas = backed->makeBacked(1, rect.Width(), rect.Height());
+	
 	//skCanvas.reset(backed->makeCanvas("SkiaWnd",rect.Width(),rect.Height()));
 	return 0;
 }

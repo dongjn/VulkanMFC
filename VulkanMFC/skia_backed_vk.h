@@ -24,12 +24,15 @@ namespace seraphim {
 			VkImage  image{VK_NULL_HANDLE};
 			VkDeviceMemory imageMemory{VK_NULL_HANDLE};
 			VkDeviceMemory localMemory{VK_NULL_HANDLE};
-			VkBuffer  localBuffer;
+			VkBuffer       localBuffer{ VK_NULL_HANDLE };
+			VkImage localImage{VK_NULL_HANDLE};
 			uint32_t width{(std::numeric_limits<uint32_t>::max)()};
 			uint32_t height{(std::numeric_limits<uint32_t>::max)()};
 			VkFormat format;
 			VkColorSpaceKHR colorSpace;
+			sk_sp<SkSurface> surface;
 			BackendHandle() {
+				
 
 			}
 			BackendHandle(const BackendHandle&& o) 
@@ -37,6 +40,7 @@ namespace seraphim {
 				image(o.image),
 				imageMemory(o.imageMemory), 
 				localMemory(o.localMemory),
+				localImage(o.localImage),
 				localBuffer(o.localBuffer),
 				width(o.width),
 				height(o.height)
@@ -49,12 +53,15 @@ namespace seraphim {
 		static shared_ptr<SkiaBackedVK> make(shared_ptr<VulkanContext> vkContext);
 	private:
 		
+		VkCommandPool  commandPool;
+		VkQueue tranQueue;
+		VkCommandBuffer commandBuffer;
+		VkFence  submintFence;
 		shared_ptr<VulkanContext> vkContext;
 		unique_ptr<GrVkExtensions> grVkExtensions;
 		sk_sp<GrContext> grContext;
 		static shared_ptr<SkiaBackedVK> self;
 		std::unordered_map<int, std::shared_ptr<BackendHandle>> mapBackend;
-
 		SkiaBackedVK(shared_ptr<VulkanContext> context) :vkContext(context) {
 
 		}

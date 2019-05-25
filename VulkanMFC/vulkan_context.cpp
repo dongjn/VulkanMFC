@@ -353,8 +353,9 @@ namespace seraphim {
 	//}
 
 
-	VulkanContext::VulkanContext(HWND w, HINSTANCE h, UINT32 width, UINT32 height) :window(w), hInstance(h), wWidth(width), wHeight(height) {
+	VulkanContext::VulkanContext(HWND w, HINSTANCE h, UINT32 width, UINT32 height) :window(w), module(h), wWidth(width), wHeight(height) {
 		if (window) {
+			hashSurface = true;
 
 			ih.vkInstanceExtensionsName.push_back(VK_KHR_SURFACE_EXTENSION_NAME);
 			ih.vkInstanceExtensionsName.push_back(VK_KHR_WIN32_SURFACE_EXTENSION_NAME);
@@ -372,7 +373,8 @@ namespace seraphim {
 		//init physical_device
 		initInstance();
 		initDevice();
-		initPresent();
+		if(hashSurface)
+			initPresent();
 		VkFenceCreateInfo fenceCreateInfo;
 		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
 		fenceCreateInfo.pNext = nullptr;
@@ -572,6 +574,7 @@ namespace seraphim {
 
 		//init surface 
 		vkDeviceWaitIdle(dh.vkDevice);
+#ifdef _WIN32
 		VkWin32SurfaceCreateInfoKHR createInfoKHR;
 		//VkAndroidSurfaceCreateInfoKHR surfaceCreateInfo;
 		createInfoKHR.hwnd = window;
@@ -580,7 +583,8 @@ namespace seraphim {
 		createInfoKHR.pNext = nullptr;
 		createInfoKHR.flags = 0;
 		vkResult = vkCreateWin32SurfaceKHR(ih.vkInstance, &createInfoKHR, nullptr, &ph.surface);
-
+#elif ANDROID
+#endif
 		assert(vkResult == VK_SUCCESS);
 		uint32_t miniImageCount = 0;
 		VkSurfaceCapabilitiesKHR  surfaceCapabilities;
@@ -783,7 +787,7 @@ namespace seraphim {
 		presentInfo.pSwapchains = &ph.swapchain;
 		presentInfo.pWaitSemaphores = &ph.acquireSemaphore;
 		vkResult = vkQueuePresentKHR(dh.graphicQueue, &presentInfo);
-		//acquireInfo.
+		assert(VK_SUCCESS == vkResult);
 	}
 
 	//************************************

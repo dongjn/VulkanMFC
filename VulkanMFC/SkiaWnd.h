@@ -4,6 +4,13 @@
 #include<memory>
 #include<SkCanvas.h>
 #include<SkBitmap.h>
+#include <chrono>
+#include <stdio.h>
+#include <chrono>
+#include <cinttypes>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 #include"skia_backed_vk.h"
 using namespace seraphim;
 
@@ -13,9 +20,9 @@ private:
 
 	static LPCTSTR  myClassName;
 private:
+	size_t   cbBuf;
 	uint8_t* bmpBuf{nullptr};
-	SkBitmap mBitmap;// {nullptr};
-	std::unique_ptr<SkCanvas> skCanvas{nullptr};
+	std::unique_ptr<SkCanvas> canvas{nullptr};
 	std::shared_ptr<SkiaBackedVK> backed{nullptr};
 public:
 

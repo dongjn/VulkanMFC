@@ -9,6 +9,14 @@
 #include<SkRefCnt.h>
 #include<vector>
 #include<Windows.h>
+#ifdef _WIN32
+typedef HWND T_WINDOW;
+typedef HINSTANCE T_MODULE;
+#elif ANDROID
+typedef 
+#endif
+
+
 class SkCanvas;
 class SkSurface;
 
@@ -16,35 +24,6 @@ using  std::shared_ptr;
 using std::unique_ptr;
 namespace seraphim {
 class SkiaBackedVK;
-	//struct VulkanSkiaBackend {
-
-	//	uint32_t width{ 0 };
-	//	uint32_t height{ 0 };
-	//	uint8_t* dstBuffer{ nullptr };
-	//	sk_sp<SkSurface>  surface{ nullptr };
-	//	SkCanvas*   canvas;
-	//	VkImage  vkImage;
-	//	VkDeviceSize  deviceMemorySize;
-	//	VkDeviceSize  deviceMemoryOffset;
-	//	SkCanvas* getCanvas() {
-	//		canvas->resetMatrix();
-	//		return canvas;
-	//	}
-
-	//	~VulkanSkiaBackend() {
-	//		delete canvas;
-	//	}
-	//	VulkanSkiaBackend(uint32_t w, uint32_t h, uint8_t* b, sk_sp<SkSurface> s, VkImage i, VkDeviceSize deviceSize, VkDeviceSize deviceOffset);
-	//};
-
-
-	struct VulkanSurfaceContext {
-		VkSurfaceKHR  surface;
-		VkSwapchainKHR  swapchainKHR;
-		VkQueue graphicQueue;
-		uint32_t graphicFamilyIndex;
-		std::vector<VkImage> swapChainImages;
-	};
 
 
 	class VulkanContext {
@@ -93,9 +72,7 @@ class SkiaBackedVK;
 			VkFence acquireFence{VK_NULL_HANDLE};
 			VkSemaphore acquireSemaphore{ VK_NULL_HANDLE };
 			VkSemaphore commandFinishSemaphore{ VK_NULL_HANDLE };
-			
 			std::vector<VkImage> images{0};
-
 			std::vector<VkCommandBuffer> imageCmdBuffer{0};
 			uint32_t currentImageIndex;
 
@@ -105,7 +82,7 @@ class SkiaBackedVK;
 		/************************************************************************/
 	public:
 		friend class SkiaBackedVK;
-		static std::shared_ptr<VulkanContext> make(HWND window, HINSTANCE hInstance, UINT32 width, UINT32 height) {
+		static std::shared_ptr<VulkanContext> make(T_WINDOW window, T_MODULE hInstance, UINT32 width, UINT32 height) {
 			if (gpVKContext.get() != nullptr)
 				return gpVKContext;
 			VulkanContext* c = new VulkanContext(window, hInstance, width, height);
@@ -124,32 +101,14 @@ class SkiaBackedVK;
 		//global
 		uint32_t vulkan_api{ 0 };
 		static std::shared_ptr<VulkanContext> gpVKContext;
-		HWND window{ nullptr };
-		HINSTANCE hInstance{ nullptr };
+		T_WINDOW window{ nullptr };
+		T_MODULE module{ nullptr };
 		UINT wWidth;
 		UINT wHeight;
 		InstanceHandle ih;
 		DeviceHandle   dh;
 		PresentHandle  ph;
-
-
-
-		//Skia
-		HINSTANCE vulkanInstance;
-
-		////        VkQueue
-		//VkDeviceMemory  localMemory;
-		//VkBuffer        localBuffer;
-		//shared_ptr<VulkanSkiaBackend>  backend;
-		//sk_sp<GrContext> grContext;
-		//VkDeviceMemory  skiaImageMemory;
-		//VkDeviceSize    skiaImageMemorySize;
-		//VkDeviceSize    skiaImageMemoryOffset;
-		//VkBuffer        copyBuffer;
-		//VkDeviceMemory  copyMemory;
-
-		//SwapChain
-		unique_ptr<VulkanSurfaceContext> surfaceContext;
+		bool hashSurface{ false };
 	private://toolkit
 		uint32_t queryMemoryTypeIndex(uint32_t type,uint32_t require_properites);
 	public:

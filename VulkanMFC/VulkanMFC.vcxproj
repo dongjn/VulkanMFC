@@ -120,7 +120,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <PreprocessorDefinitions>_WINDOWS;_CRT_SECURE_NO_WARNINGS;_DEBUG;SK_VULKAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>_WINDOWS;_DEBUG;_CRT_SECURE_NO_WARNINGS;SK_BUILD_FOR_WIN;SK_VULKAN;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <LanguageStandard>stdcpp14</LanguageStandard>
       <RuntimeTypeInfo>true</RuntimeTypeInfo>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
@@ -206,6 +206,7 @@
     <ClInclude Include="VulkanMFC.h" />
     <ClInclude Include="VulkanSkiaDlg.h" />
     <ClInclude Include="vulkan_context.h" />
+    <ClInclude Include="vulkan_utility.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="SkiaWnd.cpp" />
@@ -221,6 +222,7 @@
     <ClCompile Include="VulkanMFC.cpp" />
     <ClCompile Include="VulkanSkiaDlg.cpp" />
     <ClCompile Include="vulkan_context.cpp" />
+    <ClCompile Include="vulkan_utility.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="VulkanMFC.rc" />
