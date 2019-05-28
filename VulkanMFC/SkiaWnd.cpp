@@ -109,8 +109,14 @@ void SkiaWnd::DrawSkia() {
 	p.setColor(0xffffffff);
 	canvas->drawLine(0, 0, rect.Width(), rect.Height(), p);
 	canvas->drawLine(0, rect.Height(), rect.Width(), 0, p);
-	memset(bmpBuf, 0, cbBuf);
+	uint8_t *tempBuf = new uint8_t[cbBuf];
+	
+	//backed->readPixel_0(1, tempBuf, cbBuf);
+	//delete tempBuf;
+	//memset(bmpBuf, 0, cbBuf);
+
 	backed->readPixel(1, bmpBuf, cbBuf);
+	//backed->readPixel_0(1, bmpBuf, cbBuf);
 	Invalidate(TRUE);
 
 }
@@ -118,6 +124,8 @@ void SkiaWnd::DrawSkia() {
 void SkiaWnd::OnSize(UINT nType, int cx, int cy)
 {
 	CWnd::OnSize(nType, cx, cy);
+	width = cx;
+	height = cy;
 	// TODO: 在此处添加消息处理程序代码
 	if (this->bmpBuf)
 		delete[] bmpBuf;

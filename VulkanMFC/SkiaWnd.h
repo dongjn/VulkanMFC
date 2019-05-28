@@ -24,6 +24,8 @@ private:
 	uint8_t* bmpBuf{nullptr};
 	std::unique_ptr<SkCanvas> canvas{nullptr};
 	std::shared_ptr<SkiaBackedVK> backed{nullptr};
+	uint32_t width;
+	uint32_t height;
 public:
 
 	SkiaWnd(CWnd* parent, std::shared_ptr<SkiaBackedVK> backed ,LONG l,LONG t,LONG r,LONG b);

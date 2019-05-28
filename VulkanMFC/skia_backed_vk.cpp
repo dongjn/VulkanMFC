@@ -66,10 +66,14 @@ namespace seraphim {
 			return nullptr;
 		}
 		self.reset(s);
+		
 		return self;
 	}
 
-
+	VkResult VKAPI_CALL myVKMap(VkDevice  device,VkDeviceMemory  memory,VkDeviceSize  offset,VkDeviceSize size,VkMemoryMapFlags flags,void** ppData) {
+		printf("seraphim\r\n");
+		return vkMapMemory(device, memory, offset, size, flags, ppData);
+	}
 	void SkiaBackedVK::release()
 	{
 		self = nullptr;
@@ -112,6 +116,9 @@ namespace seraphim {
 					return strcmp(name, l) == 0;
 				});
 
+				if (strcmp(name, "vkMapMemory") == 0) {
+					function = reinterpret_cast<PFN_vkVoidFunction>(myVKMap);
+				}
 
 				if (itr != InstanceLayerFunctions.end()) {
 					function = vkGetInstanceProcAddr(vkContext->ih.vkInstance, name);
@@ -265,7 +272,7 @@ namespace seraphim {
 		handle->image = image;
 		handle->skiaImageMemory = imageMemory;
 		handle->transferMemory = locateMemory;
-		//handle->localBuffer = localBuffer;
+		handle->transferBuffer = localBuffer;
 		handle->surface.swap(surface);
 		mapBackend.insert(std::make_pair(tag, handle));
 		return pCanvas;
@@ -293,7 +300,7 @@ namespace seraphim {
 
 	}
 
-	size_t SkiaBackedVK::readPixel(int tag, uint8_t* buf, size_t cbBuffer)
+	size_t SkiaBackedVK::readPixel_0(int tag, uint8_t* buf, size_t cbBuffer)
 	{
 		auto itr = mapBackend.find(tag);
 		if (itr == mapBackend.end()) {
@@ -327,72 +334,76 @@ namespace seraphim {
 
 	}
 
-	//size_t SkiaBackedVK::readPixel(int tag, uint8_t* buf, size_t cbBuffer)
-	//{
-	//	VkResult vkResult;
-	//	auto itr = mapBackend.find(tag);
-	//	//auto buffer = itr->second->localBuffer;
-	//	VkImage copyImage;
-	//	auto local_memory = itr->second->localMemory;
-	//	auto image = itr->second->image;
-	//	auto width = itr->second->width;
-	//	auto height = itr->second->height;
+	size_t SkiaBackedVK::readPixel(int tag, uint8_t* buf, size_t cbBuffer)
+	{
+		VkResult vkResult;
+		auto itr = mapBackend.find(tag);
+		auto buffer = itr->second->transferBuffer;
+		VkImage copyImage;
+		auto local_memory = itr->second->transferMemory;
+		auto image = itr->second->image;
+		auto width = itr->second->width;
+		auto height = itr->second->height;
+		slog(INFO_LEVEL,TAG,"flush_______0");
+		itr->second->surface->flush();
+		slog(INFO_LEVEL,TAG,"flush_______1");
 
-	//	VkCommandBufferBeginInfo beginInfo;
-	//	beginInfo.pInheritanceInfo = NULL;
-	//	beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-	//	beginInfo.pNext = nullptr;
-	//	vkBeginCommandBuffer(commandBuffer, &beginInfo);
-	//	VkImageMemoryBarrier imageBarrier;
-	//	set_image_barrier(image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, imageBarrier);
-	//	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
-	//	VkBufferImageCopy regions;
-	//	regions.bufferImageHeight = height;
-	//	regions.bufferOffset = 0;
-	//	regions.bufferRowLength =  0;
-	//	regions.imageExtent.width = width;
-	//	regions.imageExtent.height = height;
-	//	regions.imageExtent.depth = 1;
-	//	regions.imageOffset = { 0,0,0 };
-	//	regions.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-	//	regions.imageSubresource.baseArrayLayer = 0;
-	//	regions.imageSubresource.layerCount = 1;
-	//	regions.imageSubresource.mipLevel = 0;
-	//	//vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &regions);
-	//	set_image_barrier(image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, imageBarrier);
-	//	vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
-	//	 vkResult = vkEndCommandBuffer(commandBuffer);
-	//	assert(vkResult == VK_SUCCESS);
-	//	
-	//	vkResetFences(vkContext->dh.vkDevice, 1, &submintFence);
-	//	VkSubmitInfo submitInfo;
-	//	submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-	//	submitInfo.pNext = nullptr;
-	//	submitInfo.commandBufferCount = 1;
-	//	submitInfo.pCommandBuffers = &commandBuffer;
-	//	submitInfo.pSignalSemaphores = nullptr;
-	//	submitInfo.signalSemaphoreCount = 0;
-	//	submitInfo.pWaitSemaphores = nullptr;
-	//	submitInfo.waitSemaphoreCount = 0;
-	//	submitInfo.pWaitDstStageMask = nullptr;
-	//	VkFence fence;
-	//	VkFenceCreateInfo fenceInfo;
-	//	fenceInfo.flags = 0;
-	//	fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-	//	fenceInfo.pNext = nullptr;
-	//	vkResult = vkCreateFence(vkContext->dh.vkDevice, &fenceInfo, nullptr, &fence);
-	//	//VkSubmitInfo(vkContext->dh.transferQueue, &submitInfo);
-	//	vkResult = vkQueueSubmit(vkContext->dh.transferQueue, 1, &submitInfo,fence);
-	//	assert(vkResult == VK_SUCCESS);
-	//	vkResult = vkWaitForFences(vkContext->dh.vkDevice, 1, &fence, VK_TRUE, 10000);
-	//	assert(vkResult == VK_SUCCESS);
-	//	uint8_t* pData = nullptr;
-	//	vkResult =vkMapMemory(vkContext->dh.vkDevice, local_memory, 0, width* height * 4, 0, (void**)&pData);
-	//	assert(vkResult == VK_SUCCESS);
-	//	memcpy(buf, pData, cbBuffer);
-	//	vkUnmapMemory(vkContext->dh.vkDevice, local_memory);
-	//	return cbBuffer;
-	//}
+		VkCommandBufferBeginInfo beginInfo;
+		beginInfo.pInheritanceInfo = NULL;
+		beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		beginInfo.pNext = nullptr;
+		vkBeginCommandBuffer(commandBuffer, &beginInfo);
+		VkImageMemoryBarrier imageBarrier;
+		set_image_barrier(image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, imageBarrier);
+		vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
+		VkBufferImageCopy regions;
+		regions.bufferImageHeight = height;
+		regions.bufferOffset = 0;
+		regions.bufferRowLength =  0;
+		regions.imageExtent.width = width;
+		regions.imageExtent.height = height;
+		regions.imageExtent.depth = 1;
+		regions.imageOffset = { 0,0,0 };
+		regions.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+		regions.imageSubresource.baseArrayLayer = 0;
+		regions.imageSubresource.layerCount = 1;
+		regions.imageSubresource.mipLevel = 0;
+		vkCmdCopyImageToBuffer(commandBuffer, image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, buffer, 1, &regions);
+		set_image_barrier(image, VK_IMAGE_ASPECT_COLOR_BIT, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, imageBarrier);
+		vkCmdPipelineBarrier(commandBuffer, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_HOST_BIT, 0, 0, nullptr, 0, nullptr, 1, &imageBarrier);
+		 vkResult = vkEndCommandBuffer(commandBuffer);
+		assert(vkResult == VK_SUCCESS);
+		
+		vkResetFences(vkContext->dh.vkDevice, 1, &submintFence);
+		VkSubmitInfo submitInfo;
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.pNext = nullptr;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.pSignalSemaphores = nullptr;
+		submitInfo.signalSemaphoreCount = 0;
+		submitInfo.pWaitSemaphores = nullptr;
+		submitInfo.waitSemaphoreCount = 0;
+		submitInfo.pWaitDstStageMask = nullptr;
+		VkFence fence;
+		VkFenceCreateInfo fenceInfo;
+		fenceInfo.flags = 0;
+		fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceInfo.pNext = nullptr;
+		vkResult = vkCreateFence(vkContext->dh.vkDevice, &fenceInfo, nullptr, &fence);
+		vkResult = vkQueueSubmit(vkContext->dh.transferQueue, 1,&submitInfo, fence);
+		assert(vkResult == VK_SUCCESS);
+		slog(INFO_LEVEL,TAG,"whait_______0");
+		vkResult = vkWaitForFences(vkContext->dh.vkDevice, 1, &fence, VK_TRUE, 1000*1000*10);
+		slog(INFO_LEVEL,TAG,"whait_______1");
+		assert(vkResult == VK_SUCCESS);
+		uint8_t* pData = nullptr;
+		vkResult =vkMapMemory(vkContext->dh.vkDevice, local_memory, 0, width* height * 4, 0, (void**)&pData);
+		assert(vkResult == VK_SUCCESS);
+		memcpy(buf, pData, cbBuffer);
+		vkUnmapMemory(vkContext->dh.vkDevice, local_memory);
+		return cbBuffer;
+	}
 }
 
 

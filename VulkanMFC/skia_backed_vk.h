@@ -69,6 +69,7 @@ namespace seraphim {
 		unique_ptr<SkCanvas> resizeBacked(int tag, uint32_t width, uint32_t height);
 		std::unordered_map<int,std::shared_ptr<BackendHandle>>::iterator releaseBacked(int tag);
 		size_t readPixel(int tag, uint8_t* buf, size_t data);
+		size_t readPixel_0(int tag, uint8_t* buf, size_t data);
 		~SkiaBackedVK();
 		
 		
