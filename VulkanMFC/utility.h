@@ -28,7 +28,7 @@
 extern HANDLE hFile;// = INVALID_HANDLE_VALUE;
 inline void windo_log(const char* TAG,std::stringstream& ss) {
 	if (hFile == INVALID_HANDLE_VALUE) {
-		hFile = CreateFileA("d:/log/vulkan_debug.log", GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, INVALID_HANDLE_VALUE);
+		hFile = CreateFileA("vulkan_debug.log", GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, 0, INVALID_HANDLE_VALUE);
 		assert(hFile != INVALID_HANDLE_VALUE);
 	}
 	std::stringstream sst;

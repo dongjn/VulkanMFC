@@ -172,6 +172,9 @@ HCURSOR CVulkanSkiaCDlg::OnQueryDragIcon()
 
 
 
+
+
+
 void CVulkanSkiaCDlg::OnSize(UINT nType, int cx, int cy)
 {
 	CDialogEx::OnSize(nType, cx, cy);

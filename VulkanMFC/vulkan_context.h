@@ -110,7 +110,7 @@ class SkiaBackedVK;
 		UINT wHeight;
 		InstanceHandle ih;
 		DeviceHandle   dh;
-		PresentHandle  ph;
+		PresentHandle  ph{0};
 		bool hashSurface{ false };
 	private://toolkit
 		uint32_t queryMemoryTypeIndex(uint32_t type,uint32_t require_properites);

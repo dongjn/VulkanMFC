@@ -11,9 +11,12 @@
 #include<cassert>
 #include<debugapi.h>
 #include<cstdlib>
-#include<varargs.h>
+#include<memory>
+//#include<varargs.h>
+#include<stdarg.h>
 #include"utility.h"
 using std::vector;
+using std::auto_ptr;
 namespace seraphim {
 
 #define AssertVulkan(msg) assert(vkResult== VK_SUCCESS && msg)
@@ -142,7 +145,7 @@ namespace seraphim {
 		//        vkGetImageMemoryRequirements(vkDevice, image, &imageMemoryRequiremennts);
 		//        skiaImageMemorySize = imageMemoryRequiremennts.size;
 		//        skiaImageMemoryOffset = 0;
-		//
+		//im
 		//
 		//
 		//
@@ -367,7 +370,6 @@ namespace seraphim {
 	}
 
 
-
 	void VulkanContext::initVulkan() {
 
 		//init physical_device
@@ -381,13 +383,11 @@ namespace seraphim {
 		fenceCreateInfo.flags = 0;
 		vkCreateFence(dh.vkDevice, &fenceCreateInfo, nullptr, &dh.submitFence);
 		AssertVulkan("CreateFence");
-
-
-
 	}
 
-
-
+	/**
+	 * 
+	 */
 	void VulkanContext::initInstance()
 	{
 		vulkan_api = UINT32MAX;
@@ -405,12 +405,12 @@ namespace seraphim {
 		vector<VkLayerProperties> layers(count_layer);
 		ih.vkLayerExtensionName.clear();
 		vkEnumerateInstanceLayerProperties(&count_layer, layers.data());
-		for (auto layer : layers) {
-			slog(INFO_LEVEL, TAG, layer.description);
-			ih.vkLayerExtensionName.push_back(layer.layerName);
-		}
-
-
+		//size_t temp = 0;
+		//for (auto layer : layers) {
+		//	slog(INFO_LEVEL, TAG, layer.description);
+		//	ih.vkLayerExtensionName.push_back(layer.layerName);
+		//	temp++;
+		//}
 		VkDebugReportCallbackCreateInfoEXT reportCallBack;
 		reportCallBack.pfnCallback;
 
@@ -443,7 +443,9 @@ namespace seraphim {
 		assert(createDebugReport);
 		vkResult = createDebugReport(ih.vkInstance, &callbackCreateInfo, nullptr, &ih.debugReportCallbackExt);
 	}
-
+	/**
+	 * 
+	 */
 	void VulkanContext::initDevice()
 	{
 		uint32_t physical_count = 0;
@@ -554,12 +556,6 @@ namespace seraphim {
 		vkCreateCommandPool(dh.vkDevice, &poolCreateInfo, nullptr, &dh.transferPool);
 		poolCreateInfo.queueFamilyIndex = dh.calculateFamily;
 		vkCreateCommandPool(dh.vkDevice, &poolCreateInfo, nullptr, &dh.calculatePool);
-
-
-
-
-
-
 	}
 
 	//************************************
